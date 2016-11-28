@@ -3,6 +3,10 @@ package model.units;
 public class Vector {
   public int x, y, vx, vy;
 
+  public Vector(int x, int y) {
+    this(x, y, 0, 0);
+  }
+
   public Vector(int x, int y, int vx, int vy) {
     this.x = x;
     this.y = y;
@@ -19,6 +23,19 @@ public class Vector {
 
   public double dist(Vector other) {
     return StrictMath.hypot(other.x - x, other.y - y);
+  }
+
+  public double angle(Vector other) {
+    double angle = StrictMath.atan2(other.y - y, other.x - x);
+    while (angle > StrictMath.PI) {
+      angle -= 2.0D * StrictMath.PI;
+    }
+
+    while (angle < -StrictMath.PI) {
+      angle += 2.0D * StrictMath.PI;
+    }
+
+    return angle;
   }
 
   @Override

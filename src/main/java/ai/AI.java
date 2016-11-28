@@ -1,8 +1,7 @@
 package ai;
 
-import model.commands.Command;
-import model.commands.Move;
-import model.commands.Throw;
+import model.Gate;
+import model.commands.*;
 import model.units.*;
 import model.units.Vector;
 
@@ -18,7 +17,8 @@ public class AI {
   final Map<Integer, Snaffl> snaffls = new HashMap<>();
   final Map<Integer, Bludger> bludgers = new HashMap<>();
 
-  final Vector enemyGoal;
+  final Gate myGate;
+  final Gate enemyGate;
 
   private int manaPool = 0;
 
@@ -26,9 +26,11 @@ public class AI {
     this.scanner = scanner;
     TEAM = scanner.nextInt();
     if (TEAM == 0) {
-      enemyGoal = new Vector(16000, 3750, 0, 0);
+      myGate = new Gate(true);
+      enemyGate = new Gate(false);
     } else {
-      enemyGoal = new Vector(0, 3750, 0, 0);
+      myGate = new Gate(false);
+      enemyGate = new Gate(true);
     }
   }
 
@@ -41,17 +43,33 @@ public class AI {
 
   private Command makeDecision(Wizard wizard) {
     if (wizard.grabbed) {
-      return new Throw(enemyGoal.x, enemyGoal.y, 500);
+      Vector target = enemyGate.closest(wizard);
+      return new Throw(target.x, target.y, 500);
     }
 
-    Snaffl target = closestTo(wizard);
+    Snaffl target = findTarget(wizard);
+    if (target == null) {
+      target = closestTo(wizard);
+    }
     return new Move(target.x, target.y, 150);
   }
 
+  private Snaffl findTarget(Wizard wizard) {
+    return null;
+  }
+
   private Snaffl closestTo(Unit unit) {
-    return snaffls.values().stream()
-        .sorted((sn1, sn2) -> Double.compare(sn1.dist(unit), sn2.dist(unit)))
-        .findFirst().get();
+    Snaffl closest = null;
+    double closestDist = 100_500;
+    for (Snaffl snaffl : snaffls.values()) {
+      if (closest == null) closest = snaffl;
+      double dist = snaffl.dist(unit);
+      if (dist < closestDist) {
+        closest = snaffl;
+        closestDist = dist;
+      }
+    }
+    return closest;
   }
 
   private void updateWorld() {
