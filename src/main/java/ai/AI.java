@@ -13,10 +13,10 @@ public class AI {
   final int TEAM;
   final Scanner scanner;
 
-  final List<Wizard> wizards = new ArrayList<>();
-  final List<Wizard> opponents = new ArrayList<>();
-  final List<Snaffl> snaffls = new ArrayList<>();
-  final List<Bludger> bludgers = new ArrayList<>();
+  final Map<Integer, Wizard> wizards = new HashMap<>();
+  final Map<Integer, Wizard> opponents = new HashMap<>();
+  final Map<Integer, Snaffl> snaffls = new HashMap<>();
+  final Map<Integer, Bludger> bludgers = new HashMap<>();
 
   final Vector enemyGoal;
 
@@ -35,7 +35,7 @@ public class AI {
   public void start() {
     while (true) {
       updateWorld();
-      wizards.forEach(wizard -> makeDecision(wizard).execute());
+      wizards.values().forEach(wizard -> makeDecision(wizard).execute());
     }
   }
 
@@ -49,7 +49,7 @@ public class AI {
   }
 
   private Snaffl closestTo(Unit unit) {
-    return snaffls.stream()
+    return snaffls.values().stream()
         .sorted((sn1, sn2) -> Double.compare(sn1.dist(unit), sn2.dist(unit)))
         .findFirst().get();
   }
@@ -59,9 +59,7 @@ public class AI {
     if (manaPool > 100) {
       manaPool = 100;
     }
-    wizards.clear();
-    opponents.clear();
-    snaffls.clear();
+    List<Integer> snafflIds = new ArrayList<>();
     int entities = scanner.nextInt();
     for (int i = 0; i < entities; i++) {// number of entities still in game
       int entityId = scanner.nextInt(); // entity identifier
@@ -73,23 +71,31 @@ public class AI {
       boolean grabbed = scanner.nextInt() == 1; // 1 if the wizard is holding a Snaffle, 0 otherwise
       switch (type) {
         case "WIZARD":
-          wizards.add(new Wizard(entityId, x, y, vx, vy, grabbed));
+          wizards.putIfAbsent(entityId, new Wizard(entityId, x, y, vx, vy, grabbed));
+          wizards.get(entityId).update(entityId, x, y, vx, vy, grabbed);
           break;
         case "OPPONENT_WIZARD":
-          opponents.add(new Wizard(entityId, x, y, vx, vy, grabbed));
+          opponents.putIfAbsent(entityId, new Wizard(entityId, x, y, vx, vy, grabbed));
+          opponents.get(entityId).update(entityId, x, y, vx, vy, grabbed);
           break;
         case "SNAFFLE":
-          snaffls.add(new Snaffl(entityId, x, y, vx, vy, grabbed));
+          snafflIds.add(entityId);
+          snaffls.putIfAbsent(entityId, new Snaffl(entityId, x, y, vx, vy, grabbed));
+          snaffls.get(entityId).update(entityId, x, y, vx, vy, grabbed);
           break;
         case "BLUDGER":
-          bludgers.add(new Bludger(entityId, x, y, vx, vy));
+          bludgers.putIfAbsent(entityId, new Bludger(entityId, x, y, vx, vy));
+          bludgers.get(entityId).update(entityId, x, y, vx, vy);
           break;
         default:
           System.err.println("UNKNOWN:" + type);
           break;
       }
-
     }
+    List<Integer> toRemove = new ArrayList<>();
+    toRemove.addAll(snaffls.keySet());
+    toRemove.removeAll(snafflIds);
+    toRemove.forEach(snaffls::remove);
 //    System.err.println(Arrays.toString(wizards.toArray()));
 //    System.err.println(Arrays.toString(opponents.toArray()));
 //    System.err.println(Arrays.toString(snaffls.toArray()));

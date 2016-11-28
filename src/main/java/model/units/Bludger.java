@@ -6,6 +6,10 @@ public class Bludger extends Unit {
     super(id, x, y, vx, vy, false);
   }
 
+  public void update(int id, int x, int y, int vx, int vy) {
+    super.update(id, x, y, vx, vy, false);
+  }
+
   @Override
   public String toString() {
     return "Bludger" + super.toString();

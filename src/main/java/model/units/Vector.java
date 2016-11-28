@@ -1,9 +1,16 @@
 package model.units;
 
 public class Vector {
-  public final int x, y, vx, vy;
+  public int x, y, vx, vy;
 
   public Vector(int x, int y, int vx, int vy) {
+    this.x = x;
+    this.y = y;
+    this.vx = vx;
+    this.vy = vy;
+  }
+
+  public void update(int x, int y, int vx, int vy) {
     this.x = x;
     this.y = y;
     this.vx = vx;
