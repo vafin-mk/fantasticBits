@@ -3,6 +3,8 @@ package model.units;
 public class Vector {
   public int x, y, vx, vy;
 
+  public double distToMyGate = 10000, distToEnemyGate = 10000;
+
   public Vector(int x, int y) {
     this(x, y, 0, 0);
   }

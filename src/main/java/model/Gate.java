@@ -38,4 +38,8 @@ public class Gate {
     }
     return closest;
   }
+
+  public Pair<Double, Double> angle(Vector vector) {
+    return new Pair<>(vector.angle(gatePoints.get(0)), vector.angle(gatePoints.get(gatePoints.size() - 1)));
+  }
 }

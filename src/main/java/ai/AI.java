@@ -20,6 +20,9 @@ public class AI {
   final Gate myGate;
   final Gate enemyGate;
 
+  final Queue<Command> commandQueue = new PriorityQueue<>();
+  final PriorityCalculator calculator;
+
   private int manaPool = 0;
 
   public AI(Scanner scanner) {
@@ -32,6 +35,8 @@ public class AI {
       myGate = new Gate(false);
       enemyGate = new Gate(true);
     }
+
+    calculator = new PriorityCalculator(myGate, enemyGate, wizards, opponents, snaffls, bludgers);
   }
 
   public void start() {
@@ -42,16 +47,43 @@ public class AI {
   }
 
   private Command makeDecision(Wizard wizard) {
-    if (wizard.grabbed) {
+    buildQueue(wizard);
+    Command command = commandQueue.poll();
+    if (command instanceof Spell) {
+      manaPool -= ((Spell) command).type.cost;
+    }
+    return command;
+  }
+
+  private void buildQueue(Wizard wizard) {
+    commandQueue.clear();
+    if (wizard.grabbed) {//todo more targets
       Vector target = enemyGate.closest(wizard);
-      return new Throw(target.x, target.y, 500);
+      commandQueue.add(new Throw(target, 500, calculator.calculateThrow(wizard, target)));
     }
 
-    Snaffl target = findTarget(wizard);
-    if (target == null) {
-      target = closestTo(wizard);
+    if (manaPool > SpellType.ACCIO.cost) {
+      snaffls.values().forEach(snaffl -> commandQueue.add(new Spell(SpellType.ACCIO, snaffl.id, calculator.calculateAccio(wizard, snaffl))));
+      bludgers.values().forEach(bludger -> commandQueue.add(new Spell(SpellType.ACCIO, bludger.id, calculator.calculateAccio(wizard, bludger))));
     }
-    return new Move(target.x, target.y, 150);
+
+    if (manaPool > SpellType.FLIPENDO.cost) {
+      snaffls.values().forEach(snaffl -> commandQueue.add(new Spell(SpellType.FLIPENDO, snaffl.id, calculator.calculateFlipendo(wizard, snaffl))));
+      bludgers.values().forEach(bludger -> commandQueue.add(new Spell(SpellType.FLIPENDO, bludger.id, calculator.calculateFlipendo(wizard, bludger))));
+      opponents.values().forEach(opponent -> commandQueue.add(new Spell(SpellType.FLIPENDO, opponent.id, calculator.calculateFlipendo(wizard, opponent))));
+      //todo ally wizards?
+    }
+
+    if (manaPool > SpellType.PETRIFICUS.cost) {
+      snaffls.values().forEach(snaffl -> commandQueue.add(new Spell(SpellType.PETRIFICUS, snaffl.id, calculator.calculatePetrificus(wizard, snaffl))));
+      bludgers.values().forEach(bludger -> commandQueue.add(new Spell(SpellType.PETRIFICUS, bludger.id, calculator.calculatePetrificus(wizard, bludger))));
+      opponents.values().forEach(opponent -> commandQueue.add(new Spell(SpellType.PETRIFICUS, opponent.id, calculator.calculatePetrificus(wizard, opponent))));
+    }
+
+    if (manaPool > SpellType.OBLIVIATE.cost) {
+      bludgers.values().forEach(bludger -> commandQueue.add(new Spell(SpellType.OBLIVIATE, bludger.id, calculator.calculateObliviate(wizard, bludger))));
+    }
+    snaffls.values().forEach(snaffl -> commandQueue.add(new Move(snaffl, 150, calculator.calculateMove(wizard, snaffl))));
   }
 
   private Snaffl findTarget(Wizard wizard) {
@@ -89,11 +121,12 @@ public class AI {
       boolean grabbed = scanner.nextInt() == 1; // 1 if the wizard is holding a Snaffle, 0 otherwise
       switch (type) {
         case "WIZARD":
-          wizards.putIfAbsent(entityId, new Wizard(entityId, x, y, vx, vy, grabbed));
+          wizards.putIfAbsent(entityId, new Wizard(entityId, x, y, vx, vy, grabbed,
+              entityId % 2 == 0 ? WizardType.ATTACKER : WizardType.DEFENDER));
           wizards.get(entityId).update(entityId, x, y, vx, vy, grabbed);
           break;
         case "OPPONENT_WIZARD":
-          opponents.putIfAbsent(entityId, new Wizard(entityId, x, y, vx, vy, grabbed));
+          opponents.putIfAbsent(entityId, new Wizard(entityId, x, y, vx, vy, grabbed, WizardType.ATTACKER));
           opponents.get(entityId).update(entityId, x, y, vx, vy, grabbed);
           break;
         case "SNAFFLE":
@@ -110,10 +143,24 @@ public class AI {
           break;
       }
     }
+
     List<Integer> toRemove = new ArrayList<>();
     toRemove.addAll(snaffls.keySet());
     toRemove.removeAll(snafflIds);
     toRemove.forEach(snaffls::remove);
+
+    List<Vector> all = new ArrayList<>();
+    all.addAll(wizards.values());
+    all.addAll(opponents.values());
+    all.addAll(snaffls.values());
+    all.addAll(bludgers.values());
+
+    all.forEach(vector -> {
+      vector.distToMyGate = vector.dist(myGate.closest(vector));
+      vector.distToEnemyGate = vector.dist(enemyGate.closest(vector));
+    });
+
+
 //    System.err.println(Arrays.toString(wizards.toArray()));
 //    System.err.println(Arrays.toString(opponents.toArray()));
 //    System.err.println(Arrays.toString(snaffls.toArray()));
