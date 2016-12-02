@@ -37,7 +37,7 @@ public class Vector {
       angle += 2.0D * StrictMath.PI;
     }
 
-    return angle;
+    return angle * 180 / StrictMath.PI;
   }
 
   @Override

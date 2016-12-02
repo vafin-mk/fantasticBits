@@ -11,10 +11,10 @@ public class Gate {
   public static final int GATE_LENGTH = 2000;
   public static final int POLE_RADIUS = 300;
 
-  public static final int TOP_POLE_Y = GATE_CENTER + GATE_LENGTH / 2 - POLE_RADIUS;
-  public static final int BOTTOM_POLE_Y = GATE_CENTER - GATE_LENGTH / 2 + POLE_RADIUS;
+  public static final int TOP_POLE_Y = GATE_CENTER + GATE_LENGTH / 2 - POLE_RADIUS / 2;
+  public static final int BOTTOM_POLE_Y = GATE_CENTER - GATE_LENGTH / 2 + POLE_RADIUS / 2;
 
-  private static final int GATE_POINT_STEP = 50;
+  private static final int GATE_POINT_STEP = 25;
 
   final List<Vector> gatePoints = new ArrayList<>();
   public final int x;

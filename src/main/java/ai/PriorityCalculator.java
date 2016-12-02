@@ -2,10 +2,8 @@ package ai;
 
 import model.Gate;
 import model.Pair;
-import model.units.Bludger;
-import model.units.Snaffl;
-import model.units.Vector;
-import model.units.Wizard;
+import model.units.*;
+
 import java.util.Map;
 
 public class PriorityCalculator {
@@ -17,11 +15,16 @@ public class PriorityCalculator {
   }
 
   public int calculateMove(Wizard wizard, Vector target) {
-    return (int) (MAX_DIST - wizard.dist(target));
+//    if (wizard.type == WizardType.ATTACKER)
+      return (int) (MAX_DIST - wizard.dist(target));
+//    return (int) (MAX_DIST - target.distToMyGate);
   }
 
   public int calculateAccio(Wizard wizard, Snaffl target) {
-    return 0;
+    if (wizard.distToMyGate < target.distToMyGate) return -1;
+    double dist = wizard.dist(target);
+    if (dist < 200 || dist > 4000) return -1;
+    return (int) (MAX_DIST - dist);
   }
 
   public int calculateAccio(Wizard wizard, Bludger target) {
@@ -29,7 +32,13 @@ public class PriorityCalculator {
   }
 
   public int calculateFlipendo(Wizard wizard, Snaffl target) {
-    return 0;
+    double dist = wizard.dist(target);
+    if (dist > 5000) return -1;
+    double angleToSnaffl = wizard.angle(target);
+    Pair<Double, Double> angleToEnemyGate = enemyGate.angle(wizard);
+    boolean shooting = angleToEnemyGate.first <= angleToSnaffl  && angleToSnaffl <= angleToEnemyGate.second;
+    if (!shooting) return -1;//todo reflect from edges
+    return (int) (MAX_DIST - dist) * 4;
   }
 
   public int calculateFlipendo(Wizard wizard, Bludger target) {
@@ -73,4 +82,6 @@ public class PriorityCalculator {
     this.snaffls = snaffls;
     this.bludgers = bludgers;
   }
+
+  //MIN( 6000 / ( Dist / 1000 )^2, 1000 ) - flip power
 }
